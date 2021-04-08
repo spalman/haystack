@@ -88,7 +88,13 @@ class SQLDocumentStore(BaseDocumentStore):
                                           added already exists. Using this parameter could cause performance degradation
                                           for document insertion.
         """
-        engine = create_engine(url)
+        if "sqlite" in url:
+            import sqlite3
+            if sqlite3.sqlite_version < "3.25":
+                self.use_windowed_query = False
+                engine = create_engine(url, connect_args={'check_same_thread': False})
+        else:
+            engine = create_engine(url)
         ORMBase.metadata.create_all(engine)
         Session = sessionmaker(bind=engine)
         self.session = Session()
@@ -98,10 +104,6 @@ class SQLDocumentStore(BaseDocumentStore):
         if getattr(self, "similarity", None) is None:
             self.similarity = None
         self.use_windowed_query = True
-        if "sqlite" in url:
-            import sqlite3
-            if sqlite3.sqlite_version < "3.25":
-                self.use_windowed_query = False
 
     def get_document_by_id(self, id: str, index: Optional[str] = None) -> Optional[Document]:
         """Fetch a document by specifying its text id string"""
