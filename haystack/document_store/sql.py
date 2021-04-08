@@ -95,6 +95,7 @@ class SQLDocumentStore(BaseDocumentStore):
                 engine = create_engine(url, connect_args={'check_same_thread': False})
         else:
             engine = create_engine(url)
+            self.use_windowed_query = True
         ORMBase.metadata.create_all(engine)
         Session = sessionmaker(bind=engine)
         self.session = Session()
@@ -103,7 +104,7 @@ class SQLDocumentStore(BaseDocumentStore):
         self.update_existing_documents = update_existing_documents
         if getattr(self, "similarity", None) is None:
             self.similarity = None
-        self.use_windowed_query = True
+        
 
     def get_document_by_id(self, id: str, index: Optional[str] = None) -> Optional[Document]:
         """Fetch a document by specifying its text id string"""
